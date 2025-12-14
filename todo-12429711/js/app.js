@@ -45,6 +45,11 @@ function renderTask(task) {
 
         try {
             const res = await fetch(url);
+
+            if (!res.ok) {
+                throw new Error("Request failed");
+            }
+
             const data = await res.json();
 
             if (data.success) {
@@ -53,23 +58,21 @@ function renderTask(task) {
             } else {
                 setStatus("Failed to delete task.", true);
             }
-        } catch (err) {
-            setStatus("Network error while deleting.", true);
+        } catch (error) {
+            setStatus("Error deleting task.", true);
         }
     });
 
     actions.appendChild(delBtn);
-
     li.appendChild(title);
     li.appendChild(actions);
-
     list.appendChild(li);
 }
 
 // -------------------------------------------------------
-// LOAD TASKS ON PAGE OPEN
+// LOAD TASKS
 // -------------------------------------------------------
-document.addEventListener("DOMContentLoaded", async () => {
+async function loadTasks() {
     setStatus("Loading tasks...");
 
     const url =
@@ -77,19 +80,26 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     try {
         const res = await fetch(url);
-        const data = await res.json();
 
+        if (!res.ok) {
+            throw new Error("Request failed");
+        }
+
+        const data = await res.json();
         list.innerHTML = "";
 
         if (data.tasks && Array.isArray(data.tasks)) {
-            data.tasks.forEach((task) => renderTask(task));
+            data.tasks.forEach(task => renderTask(task));
         }
 
         setStatus("");
     } catch (error) {
         setStatus("Failed to load tasks.", true);
     }
-});
+}
+
+// Load tasks on page open
+document.addEventListener("DOMContentLoaded", loadTasks);
 
 // -------------------------------------------------------
 // ADD NEW TASK
@@ -112,6 +122,10 @@ form.addEventListener("submit", async (event) => {
             body: JSON.stringify({ title })
         });
 
+        if (!res.ok) {
+            throw new Error("Request failed");
+        }
+
         const data = await res.json();
 
         if (data.task) {
@@ -121,7 +135,7 @@ form.addEventListener("submit", async (event) => {
         } else {
             setStatus("Failed to add task.", true);
         }
-    } catch (err) {
-        setStatus("Network error while adding.", true);
+    } catch (error) {
+        setStatus("Error adding task.", true);
     }
 });
